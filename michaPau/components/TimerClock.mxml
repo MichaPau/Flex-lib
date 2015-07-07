@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="init()">
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="JJ:NN:SS"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			/**
+			 * Slightly modified from http://blog.flexexamples.com
+			 * (can't find the original post anymore)
+			 * added pause functionality and 'multi' hour label format
+			 * **/
+			
+			import flash.events.TimerEvent;
+			import flash.utils.Timer;
+			
+			private const TIMER_INTERVAL:int = 10;
+			
+			private var baseTimer:int;
+			
+			private var t:Timer;
+			private var _elapsed:int;
+			private var _pauseElapsed:int;
+			private var _startTime:int;
+			private var _stopTime:int;
+			private var _timerActive:Boolean = false;
+			
+			
+			
+			[Bindable]
+			public function get timerActive():Boolean
+			{
+				return _timerActive;
+			}
+			
+			public function set timerActive(value:Boolean):void
+			{
+				_timerActive = value;
+			}
+			
+			public function get elapsed():int {
+				return _elapsed;
+			}
+			public function get startTime():int {
+				return _startTime;
+			}
+			public function get stopTime():int {
+				return _stopTime;
+			}
+			public function setFormatString(formatStr:String):void {
+				dateFormatter.formatString = formatStr;
+			}
+			public function init():void {
+				t = new Timer(TIMER_INTERVAL);
+				t.addEventListener(TimerEvent.TIMER, updateTimer);
+				
+				var d:Date = new Date(0,0,0,0,0,0,0);
+				
+				counter.text = dateFormatter.format(d);
+			}
+			
+			private function updateTimer(evt:TimerEvent):void {
+				
+				var ms:Number = (getTimer() - baseTimer) + _pauseElapsed;
+				var d:Date = new Date(0,0,0,0,0,0,ms);
+				
+				counter.text = dateFormatter.format(d);
+			}
+			
+			public function startTimer(ev:Event = null):void {
+				_elapsed = 0;
+				//_pauseElapsed = 3600000;
+				_pauseElapsed = 0;
+				_startTime = new Date().time;
+				baseTimer = getTimer();
+				timerActive = true;
+				t.start();
+			}
+			
+			public function stopTimer(ev:Event = null):void {
+				if(t.running) {
+					_elapsed = (getTimer() - baseTimer) + _pauseElapsed;
+					t.stop();
+				} else {
+					_elapsed = _pauseElapsed;
+				}
+				
+				_stopTime = new Date().time;
+				timerActive = false;
+				
+			}
+			public function pauseTimer(ev:Event = null):void {
+				if(timerActive) {
+					_pauseElapsed += getTimer() - baseTimer;
+					t.stop();	
+				}
+			}
+			public function restartTimer():void {
+				if(timerActive) {
+					baseTimer = getTimer();
+					t.start();
+				}
+			}
+			public function togglePause():void {
+				if(timerActive) {
+					if(t.running)
+						pauseTimer();
+					else
+						restartTimer();
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:Label id="counter" fontSize="36" />
+</s:Group>
